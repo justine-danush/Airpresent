@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=3">
+  <title>AirPresent — Wireless Air Remote</title>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  
+  <main>
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.9 12.2a1 1 0 0 0 1.6 1L14.7 14l3.8.5a1 1 0 0 0 .9-1.4L12 3z"/>
+            <path d="M3 12a9 9 0 0 1 15-6.7"/>
+            <path d="M3 12a9 9 0 0 0 15 6.7"/>
+          </svg>
+        </div>
+        <span class="logo-title">AirPresent</span>
+        <span class="version-tag">PRO</span>
+      </div>
+
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot"></span>
+        <span id="statusText">Pairing Required</span>
+      </div>
+    </header>
+
+    <p id="status" class="status-message">Enter the 6-character code shown on your presentation screen to connect.</p>
+
+    <!-- Pairing Screen -->
+    <section id="pairing" class="glass-card pairing-card">
+      <div class="input-group">
+        <label for="code" class="input-label">PASSCODE</label>
+        <input id="code" autocomplete="one-time-code" maxlength="6" placeholder="• • • • • •" value="123456">
+      </div>
+      <button id="connect" class="btn btn-primary btn-glow">
+        <span>Connect Remote</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </section>
+
+    <!-- Connected Remote Screen -->
+    <section id="remote" class="remote-view" hidden>
+      <!-- Hero Air Cursor Controller -->
+      <div class="glass-card motion-hero">
+        <div class="motion-header">
+          <div class="motion-info">
+            <h2>Air Mouse Cursor</h2>
+            <p>Tilt your phone to steer the cursor on screen.</p>
+          </div>
+        </div>
+        
+        <button id="motion" class="btn btn-hero">
+          <div class="btn-hero-glow"></div>
+          <span class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+          </span>
+          <span class="hero-text">Start Air Cursor</span>
+        </button>
+
+        <div class="motion-vis" id="motionVis" hidden>
+          <div class="vis-ring vis-ring-1"></div>
+          <div class="vis-ring vis-ring-2"></div>
+          <div class="vis-puck" id="visPuck"></div>
+        </div>
+      </div>
+
+      <!-- Round Dial Click Controller -->
+      <div class="dial-container">
+        <button data-click="left" class="btn btn-circle btn-click-left">
+          <span>LEFT<br>CLICK</span>
+        </button>
+
+        <button data-click="right" class="btn btn-circle btn-click-right">
+          <span>RIGHT<br>CLICK</span>
+        </button>
+      </div>
+
+      <!-- Slide Navigation Grid -->
+      <div class="slides-grid">
+        <button data-key="previous" class="btn btn-action btn-slide">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>PREVIOUS</span>
+        </button>
+
+        <button data-key="next" class="btn btn-action btn-slide btn-slide-primary">
+          <span>NEXT</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      <button id="escape" class="btn btn-secondary btn-escape">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        <span>EXIT PRESENTATION (ESC)</span>
+      </button>
+    </section>
+  </main>
+
+  <script src="app.js?v=5"></script>
+</body>
+</html>
+
