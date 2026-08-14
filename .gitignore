@@ -21,6 +21,13 @@ local.properties
 *.swp
 *.swo
 
+# Environment & secret files
+.env
+.env.*
+*.env
+*.pem
+*.key
+
 # OS files
 Thumbs.db
 Desktop.ini
