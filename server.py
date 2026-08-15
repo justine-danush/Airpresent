@@ -78,11 +78,32 @@ def local_ip() -> str:
 
 
 def move_cursor(dx: float, dy: float) -> None:
-    global cursor_acc_x, cursor_acc_y
-    cursor_acc_x += dx
-    cursor_acc_y += dy
+    """Applies a 1€ Low-Pass Tremor Filter & sub-pixel accumulator before moving mouse."""
+    global cursor_acc_x, cursor_acc_y, smooth_dx, smooth_dy
+
+    speed = math.hypot(dx, dy)
+
+    # 1. Micro-Tremor Suppression (filters out hand twitches)
+    if speed < TREMOR_DEADZONE:
+        smooth_dx *= 0.4
+        smooth_dy *= 0.4
+        return
+
+    # 2. Dynamic Adaptive Smoothing Alpha
+    # Slow movement (aiming): alpha ~ 0.25 (High smoothing, rock-solid cursor)
+    # Fast movement (swiping): alpha ~ 0.85 (Zero lag)
+    speed_factor = min(1.0, max(0.0, (speed - 0.5) / 4.5))
+    alpha = 0.25 + 0.60 * speed_factor
+
+    # Exponential Moving Average (EMA) low-pass filter
+    smooth_dx = alpha * dx + (1.0 - alpha) * smooth_dx
+    smooth_dy = alpha * dy + (1.0 - alpha) * smooth_dy
+
+    cursor_acc_x += smooth_dx
+    cursor_acc_y += smooth_dy
     move_x = int(cursor_acc_x)
     move_y = int(cursor_acc_y)
+
     if move_x != 0 or move_y != 0:
         cursor_acc_x -= move_x
         cursor_acc_y -= move_y

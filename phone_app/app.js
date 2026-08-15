@@ -122,6 +122,8 @@ async function enableMotion() {
 }
 motionButton.onclick = enableMotion;
 
+let smoothDx = 0, smoothDy = 0;
+
 window.addEventListener('deviceorientation', event => {
   if (!motionActive || event.beta == null || event.gamma == null) return;
   receivedMotion = true;
@@ -139,9 +141,20 @@ window.addEventListener('deviceorientation', event => {
     visPuck.style.transform = `translate(${px}px, ${py}px)`;
   }
 
-  const dx = rawDx * 2.1;
-  const dy = rawDy * 2.1;
-  if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) send({type: 'move', dx, dy});
+  let dx = rawDx * 2.1;
+  let dy = rawDy * 2.1;
+  const speed = Math.hypot(dx, dy);
+
+  // Tremor Suppression & Low-pass filter
+  if (speed < 0.4) {
+    smoothDx *= 0.4;
+    smoothDy *= 0.4;
+  } else {
+    const alpha = Math.min(1.0, Math.max(0.3, speed / 4.0));
+    smoothDx = alpha * dx + (1 - alpha) * smoothDx;
+    smoothDy = alpha * dy + (1 - alpha) * smoothDy;
+    send({type: 'move', dx: smoothDx, dy: smoothDy});
+  }
   baseline = {beta: event.beta, gamma: event.gamma};
 });
 

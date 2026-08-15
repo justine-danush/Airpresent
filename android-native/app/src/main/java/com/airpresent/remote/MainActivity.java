@@ -29,6 +29,7 @@ public class MainActivity extends Activity implements SensorEventListener {
   private TextView state; private TextView statusDot; private EditText address; private EditText pinInput; private Button airButton; private boolean airOn = false;
   private LinearLayout page1Container, page2Container;
   private float lastX, lastY; private long lastMove;
+  private float filterDx = 0f, filterDy = 0f;
 
   @Override public void onCreate(Bundle saved) {
     super.onCreate(saved);
@@ -472,13 +473,22 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
     lastMove = now;
 
-    if (Math.abs(dx) > 0.05f || Math.abs(dy) > 0.05f) {
-      sendMotion(dx, dy);
-      runOnUiThread(() -> {
-        statusDot.setTextColor(Color.rgb(56, 189, 248));
-        state.setText("Motion active — cursor moving");
-      });
+    float mag = (float) Math.hypot(dx, dy);
+    if (mag < 0.4f) {
+      filterDx *= 0.4f;
+      filterDy *= 0.4f;
+      return;
     }
+
+    float alpha = Math.min(1.0f, Math.max(0.25f, mag / 4.5f));
+    filterDx = alpha * dx + (1.0f - alpha) * filterDx;
+    filterDy = alpha * dy + (1.0f - alpha) * filterDy;
+
+    sendMotion(filterDx, filterDy);
+    runOnUiThread(() -> {
+      statusDot.setTextColor(Color.rgb(56, 189, 248));
+      state.setText("Motion active — cursor moving");
+    });
   }
 
   @Override public void onAccuracyChanged(Sensor s, int a) {}
