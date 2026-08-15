@@ -13,7 +13,11 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import android.content.Intent;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 /** Native Android companion: reads the gyroscope directly, not through Chrome. */
 public class MainActivity extends Activity implements SensorEventListener {
@@ -172,6 +176,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     pinInput.setLayoutParams(pinParams);
     connCard.addView(pinInput);
 
+    Button scanQrBtn = createStyledButton("📷 SCAN PC QR CODE", Color.rgb(45, 212, 191), Color.rgb(20, 184, 166), Color.rgb(11, 15, 25), 18f, v -> startQrScan());
+    LinearLayout.LayoutParams scanBtnParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    scanBtnParams.setMargins(0, 0, 0, dpToPx(12));
+    scanQrBtn.setLayoutParams(scanBtnParams);
+    connCard.addView(scanQrBtn);
+
     Button connectBtn = createStyledButton("CONNECT REMOTE", Color.rgb(56, 189, 248), Color.rgb(129, 140, 248), Color.rgb(11, 15, 25), 18f, v -> pair());
     LinearLayout.LayoutParams connBtnParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     connectBtn.setLayoutParams(connBtnParams);
@@ -279,6 +289,50 @@ public class MainActivity extends Activity implements SensorEventListener {
         });
       }
     });
+  }
+
+  private void startQrScan() {
+    try {
+      IntentIntegrator integrator = new IntentIntegrator(this);
+      integrator.setPrompt("Point camera at AirPresent QR Code on PC screen");
+      integrator.setBeepEnabled(true);
+      integrator.setOrientationLocked(true);
+      integrator.setCaptureActivity(com.journeyapps.barcodescanner.CaptureActivity.class);
+      integrator.initiateScan();
+    } catch (Exception e) {
+      Toast.makeText(this, "Could not open camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+    }
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+    if (result != null && result.getContents() != null) {
+      handleScannedQr(result.getContents());
+    } else {
+      super.onActivityResult(requestCode, resultCode, data);
+    }
+  }
+
+  private void handleScannedQr(String contents) {
+    if (contents == null || contents.isEmpty()) return;
+    try {
+      // Parse host IP (e.g. 192.168.1.10:8765)
+      Matcher hostMatch = Pattern.compile("(?:https?://)?([^/#?\\s]+)").matcher(contents);
+      if (hostMatch.find()) {
+        String host = hostMatch.group(1);
+        if (address != null && !host.isEmpty()) address.setText(host);
+      }
+      // Parse 6-digit PIN code (e.g. code=749312)
+      Matcher pinMatch = Pattern.compile("code=([a-zA-Z0-9]{6})").matcher(contents);
+      if (pinMatch.find()) {
+        String pin = pinMatch.group(1);
+        if (pinInput != null) pinInput.setText(pin);
+      }
+      pair();
+    } catch (Exception e) {
+      Toast.makeText(this, "Scanned QR: " + contents, Toast.LENGTH_LONG).show();
+    }
   }
 
   private String post(String path, String json) throws Exception {
