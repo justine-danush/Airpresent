@@ -310,7 +310,11 @@ public class MainActivity extends Activity implements SensorEventListener {
       try {
         String result = post("/pair", "{\"code\":\"" + pin + "\"}");
         Matcher match = Pattern.compile("\\\"token\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"").matcher(result);
-        if (!match.find()) throw new IOException("Invalid PIN or pairing refused.");
+        if (!match.find()) {
+          Matcher errMatch = Pattern.compile("\\\"error\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"").matcher(result);
+          String errMsg = errMatch.find() ? errMatch.group(1) : "Invalid PIN code. Check your PC screen.";
+          throw new IOException(errMsg);
+        }
         token = match.group(1);
         runOnUiThread(() -> {
           statusDot.setTextColor(Color.rgb(16, 185, 129));
@@ -405,10 +409,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     try (OutputStream o = c.getOutputStream()) {
       o.write(json.getBytes(StandardCharsets.UTF_8));
     }
-    if (c.getResponseCode() != 200) throw new IOException("HTTP " + c.getResponseCode());
-    try (InputStream i = c.getInputStream()) {
+    int code = c.getResponseCode();
+    InputStream i = (code >= 200 && code < 300) ? c.getInputStream() : c.getErrorStream();
+    if (i != null) {
       return new String(i.readAllBytes(), StandardCharsets.UTF_8);
     }
+    throw new IOException("HTTP " + code);
   }
 
   private void send(String event) {

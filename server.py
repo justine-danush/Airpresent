@@ -165,9 +165,13 @@ class AirPresentHandler(SimpleHTTPRequestHandler):
 
         if self.path == "/pair":
             now = time.time()
-            if FAILED_PAIR_ATTEMPTS >= 5 and (now - LAST_FAILED_TIME) < 60:
-                gui_log("⚠️ Rate Limit: Too many failed pairing attempts (60s lock).")
-                self.send_error(429, "Too Many Requests: Rate limited")
+            # Auto-reset failed counter if 15s passed since last failure
+            if (now - LAST_FAILED_TIME) > 15:
+                FAILED_PAIR_ATTEMPTS = 0
+
+            if FAILED_PAIR_ATTEMPTS >= 8 and (now - LAST_FAILED_TIME) < 10:
+                gui_log("⚠️ Rate Limit: Too many failed pairing attempts (10s cooldown).")
+                self.send_json({"ok": False, "error": "Rate limited: Wait 10s or click New PIN on PC."})
                 return
 
             submitted_code = str(event.get("code", "")).strip()
@@ -181,7 +185,7 @@ class AirPresentHandler(SimpleHTTPRequestHandler):
                 FAILED_PAIR_ATTEMPTS += 1
                 LAST_FAILED_TIME = now
                 gui_log(f"❌ Pairing refused: invalid PIN [{submitted_code}].")
-                self.send_json({"ok": False, "error": "Invalid PIN code"})
+                self.send_json({"ok": False, "error": "Invalid PIN code. Check your PC screen."})
 
         elif self.path == "/control":
             req_token = str(event.pop("token", ""))
@@ -359,12 +363,13 @@ class AirPresentApp(tk.Tk):
             self.qr_lbl.configure(image=self.qr_photo)
 
     def regenerate_pin(self):
-        global PAIRING_CODE, SESSION_TOKEN
+        global PAIRING_CODE, SESSION_TOKEN, FAILED_PAIR_ATTEMPTS
         PAIRING_CODE = f"{secrets.randbelow(1000000):06d}"
         SESSION_TOKEN = secrets.token_urlsafe(32)
+        FAILED_PAIR_ATTEMPTS = 0
         self.pin_lbl.configure(text=PAIRING_CODE)
         self.update_qr_image()
-        gui_log(f"🔑 Security PIN regenerated: [{PAIRING_CODE}]")
+        gui_log(f"🔑 Security PIN regenerated: [{PAIRING_CODE}] (Rate limit reset)")
 
     def copy_pair_url(self):
         url = self.get_pair_url()
