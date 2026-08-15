@@ -37,13 +37,13 @@
       </div>
     </header>
 
-    <p id="status" class="status-message">Enter the 6-character code shown on your presentation screen to connect.</p>
+    <p id="status" class="status-message">Scan the QR code on your PC screen or enter the 6-digit PIN.</p>
 
     <!-- Pairing Screen -->
     <section id="pairing" class="glass-card pairing-card">
       <div class="input-group">
-        <label for="code" class="input-label">PASSCODE</label>
-        <input id="code" autocomplete="one-time-code" maxlength="6" placeholder="• • • • • •" value="123456">
+        <label for="code" class="input-label">6-DIGIT PIN CODE</label>
+        <input id="code" autocomplete="one-time-code" type="number" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •">
       </div>
       <button id="connect" class="btn btn-primary btn-glow">
         <span>Connect Remote</span>

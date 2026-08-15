@@ -22,7 +22,7 @@ public class MainActivity extends Activity implements SensorEventListener {
   private float pendingDx = 0f, pendingDy = 0f;
 
   private SensorManager sensors; private Sensor motionSensor; private boolean useGyroscope; private String token = "";
-  private TextView state; private TextView statusDot; private EditText address; private Button airButton; private boolean airOn = false;
+  private TextView state; private TextView statusDot; private EditText address; private EditText pinInput; private Button airButton; private boolean airOn = false;
   private float lastX, lastY; private long lastMove;
 
   @Override public void onCreate(Bundle saved) {
@@ -150,12 +150,27 @@ public class MainActivity extends Activity implements SensorEventListener {
     address.setTextSize(18);
     address.setGravity(Gravity.CENTER);
     address.setBackground(roundedDrawable(Color.rgb(15, 23, 42), Color.rgb(15, 23, 42), 18f, Color.argb(40, 255, 255, 255), 1));
-    address.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+    address.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
 
     LinearLayout.LayoutParams addrParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    addrParams.setMargins(0, 0, 0, dpToPx(16));
+    addrParams.setMargins(0, 0, 0, dpToPx(12));
     address.setLayoutParams(addrParams);
     connCard.addView(address);
+
+    pinInput = new EditText(this);
+    pinInput.setHint("Enter 6-Digit PIN (e.g. 749312)");
+    pinInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+    pinInput.setTextColor(Color.WHITE);
+    pinInput.setHintTextColor(Color.rgb(100, 116, 139));
+    pinInput.setTextSize(16);
+    pinInput.setGravity(Gravity.CENTER);
+    pinInput.setBackground(roundedDrawable(Color.rgb(15, 23, 42), Color.rgb(15, 23, 42), 18f, Color.argb(40, 255, 255, 255), 1));
+    pinInput.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
+
+    LinearLayout.LayoutParams pinParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    pinParams.setMargins(0, 0, 0, dpToPx(16));
+    pinInput.setLayoutParams(pinParams);
+    connCard.addView(pinInput);
 
     Button connectBtn = createStyledButton("CONNECT REMOTE", Color.rgb(56, 189, 248), Color.rgb(129, 140, 248), Color.rgb(11, 15, 25), 18f, v -> pair());
     LinearLayout.LayoutParams connBtnParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -240,15 +255,21 @@ public class MainActivity extends Activity implements SensorEventListener {
   }
 
   private void pair() {
+    final String pin = pinInput != null ? pinInput.getText().toString().trim() : "";
+    if (pin.length() != 6) {
+      statusDot.setTextColor(Color.rgb(244, 63, 94));
+      state.setText("Enter 6-digit PIN shown on PC.");
+      return;
+    }
     io.execute(() -> {
       try {
-        String result = post("/pair", "{\"code\":\"123456\"}");
+        String result = post("/pair", "{\"code\":\"" + pin + "\"}");
         Matcher match = Pattern.compile("\\\"token\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"").matcher(result);
-        if (!match.find()) throw new IOException("No session token");
+        if (!match.find()) throw new IOException("Invalid PIN or pairing refused.");
         token = match.group(1);
         runOnUiThread(() -> {
           statusDot.setTextColor(Color.rgb(16, 185, 129));
-          state.setText("Connected. Ready for motion.");
+          state.setText("Connected securely. Ready for motion.");
           updateAirButtonState();
         });
       } catch (Exception e) {
