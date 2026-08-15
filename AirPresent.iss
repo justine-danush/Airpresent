@@ -1,5 +1,4 @@
 ; AirPresent Professional Windows Installer Script (Inno Setup 6)
-; Automates app deployment, desktop shortcuts, and Windows Firewall rule creation.
 
 [Setup]
 AppName=AirPresent Wireless Air Remote
@@ -12,7 +11,7 @@ UninstallDisplayIcon={app}\AirPresent.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
 OutputDir=.
-OutputBaseFilename=AirPresent_Setup_v2.1.0
+OutputBaseFilename=AirPresent_Setup
 PrivilegesRequired=admin
 SetupIconFile=icon.ico
 WizardStyle=modern
@@ -31,10 +30,16 @@ Name: "{autoprograms}\AirPresent"; Filename: "{app}\AirPresent.exe"
 Name: "{autodesktop}\AirPresent"; Filename: "{app}\AirPresent.exe"; Tasks: desktopicon
 
 [Run]
-; Automatically register Windows Defender Firewall Rule for port 8765 during installation
-Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""AirPresent Remote Server (TCP-In)"" dir=in action=allow protocol=TCP localport=8765"; Flags: runhidden
+; Remove any existing BLOCK rules created by Windows Firewall
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""airpresent.exe"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""AirPresent"""; Flags: runhidden
+
+; Add explicit ALLOW rules on ALL network profiles (Private, Public, Domain)
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""AirPresent Program"" dir=in action=allow program=""{app}\AirPresent.exe"" enable=yes profile=any"; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""AirPresent Port 8765"" dir=in action=allow protocol=TCP localport=8765 enable=yes profile=any"; Flags: runhidden
+
 Filename: "{app}\AirPresent.exe"; Description: "Launch AirPresent Remote Server"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
-; Automatically clean up firewall rule on uninstall
-Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""AirPresent Remote Server (TCP-In)"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""AirPresent Program"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""AirPresent Port 8765"""; Flags: runhidden

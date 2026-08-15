@@ -1,16 +1,26 @@
 @echo off
-title AirPresent Firewall Fixer
+title AirPresent Firewall Unblocker & Configurator
 echo ============================================================
-echo   AirPresent Windows Firewall Configuration
+echo   AirPresent Windows Firewall Unblocker
 echo ============================================================
 echo.
-echo Adding inbound firewall rule for AirPresent on port 8765...
+echo 1. Removing any existing Windows Firewall BLOCK rules...
+netsh advfirewall firewall delete rule name="airpresent.exe"
+netsh advfirewall firewall delete rule name="AirPresent"
+netsh advfirewall firewall delete rule name="AirPresent Remote Server (TCP-In)"
+netsh advfirewall firewall delete rule name="AirPresent Port 8765"
+
 echo.
-netsh advfirewall firewall add rule name="AirPresent Remote Server (TCP-In)" dir=in action=allow protocol=TCP localport=8765
+echo 2. Adding explicit ALLOW rules for AirPresent on all network profiles...
+netsh advfirewall firewall add rule name="AirPresent Program" dir=in action=allow program="%~dp0AirPresent.exe" enable=yes profile=any
+netsh advfirewall firewall add rule name="AirPresent Port 8765" dir=in action=allow protocol=TCP localport=8765 enable=yes profile=any
+
 echo.
 if %errorlevel% equ 0 (
-    echo [SUCCESS] Windows Firewall rule added successfully!
-    echo Your phone will now connect instantly to AirPresent.
+    echo ============================================================
+    echo [SUCCESS] Firewall BLOCK rules removed and ALLOW rules added!
+    echo Your phone will now connect instantly.
+    echo ============================================================
 ) else (
     echo [ERROR] Please RIGHT-CLICK this file and select "Run as administrator".
 )
