@@ -141,18 +141,12 @@ window.addEventListener('deviceorientation', event => {
     visPuck.style.transform = `translate(${px}px, ${py}px)`;
   }
 
-  let dx = rawDx * 2.1;
-  let dy = rawDy * 2.1;
-  const speed = Math.hypot(dx, dy);
+  let dx = rawDx * 2.5;
+  let dy = rawDy * 2.5;
 
-  // Tremor Suppression & Low-pass filter
-  if (speed < 0.4) {
-    smoothDx *= 0.4;
-    smoothDy *= 0.4;
-  } else {
-    const alpha = Math.min(1.0, Math.max(0.3, speed / 4.0));
-    smoothDx = alpha * dx + (1 - alpha) * smoothDx;
-    smoothDy = alpha * dy + (1 - alpha) * smoothDy;
+  if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
+    smoothDx = 0.7 * dx + 0.3 * smoothDx;
+    smoothDy = 0.7 * dy + 0.3 * smoothDy;
     send({type: 'move', dx: smoothDx, dy: smoothDy});
   }
   baseline = {beta: event.beta, gamma: event.gamma};

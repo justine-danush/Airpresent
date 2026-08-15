@@ -479,22 +479,15 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
     lastMove = now;
 
-    float mag = (float) Math.hypot(dx, dy);
-    if (mag < 0.4f) {
-      filterDx *= 0.4f;
-      filterDy *= 0.4f;
-      return;
+    if (Math.abs(dx) > 0.05f || Math.abs(dy) > 0.05f) {
+      filterDx = 0.7f * dx + 0.3f * filterDx;
+      filterDy = 0.7f * dy + 0.3f * filterDy;
+      sendMotion(filterDx, filterDy);
+      runOnUiThread(() -> {
+        statusDot.setTextColor(Color.rgb(56, 189, 248));
+        state.setText("Motion active — cursor moving");
+      });
     }
-
-    float alpha = Math.min(1.0f, Math.max(0.25f, mag / 4.5f));
-    filterDx = alpha * dx + (1.0f - alpha) * filterDx;
-    filterDy = alpha * dy + (1.0f - alpha) * filterDy;
-
-    sendMotion(filterDx, filterDy);
-    runOnUiThread(() -> {
-      statusDot.setTextColor(Color.rgb(56, 189, 248));
-      state.setText("Motion active — cursor moving");
-    });
   }
 
   @Override public void onAccuracyChanged(Sensor s, int a) {}
