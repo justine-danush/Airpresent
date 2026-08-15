@@ -82,22 +82,21 @@ def local_ip() -> str:
 
 
 def move_cursor(dx: float, dy: float) -> None:
-    """Smooth sub-pixel cursor motion handler."""
-    global cursor_acc_x, cursor_acc_y, smooth_dx, smooth_dy
+    """Smooth sub-pixel cursor motion handler using SetCursorPos."""
+    global cursor_acc_x, cursor_acc_y
 
-    # Apply lightweight EMA smoothing (alpha = 0.6) for jitter-free responsive motion
-    smooth_dx = 0.6 * dx + 0.4 * smooth_dx
-    smooth_dy = 0.6 * dy + 0.4 * smooth_dy
-
-    cursor_acc_x += smooth_dx
-    cursor_acc_y += smooth_dy
+    cursor_acc_x += dx
+    cursor_acc_y += dy
     move_x = int(cursor_acc_x)
     move_y = int(cursor_acc_y)
 
     if move_x != 0 or move_y != 0:
         cursor_acc_x -= move_x
         cursor_acc_y -= move_y
-        USER32.mouse_event(0x0001, ctypes.c_ulong(move_x & 0xFFFFFFFF), ctypes.c_ulong(move_y & 0xFFFFFFFF), 0, 0)
+
+        pt = wintypes.POINT()
+        if USER32.GetCursorPos(ctypes.byref(pt)):
+            USER32.SetCursorPos(pt.x + move_x, pt.y + move_y)
 
 
 def mouse_click(button: str) -> None:
