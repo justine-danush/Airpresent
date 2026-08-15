@@ -24,6 +24,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "AirPresent.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "phone_app\*"; DestDir: "{app}\phone_app"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\AirPresent"; Filename: "{app}\AirPresent.exe"

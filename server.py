@@ -41,8 +41,12 @@ if getattr(sys, "frozen", False):
     ROOT = bundle_dir / "phone_app"
     if not ROOT.exists():
         ROOT = Path(sys.executable).parent / "phone_app"
+    if not ROOT.exists():
+        ROOT = Path(sys.executable).parent
 else:
     ROOT = Path(__file__).parent / "phone_app"
+    if not ROOT.exists():
+        ROOT = Path(__file__).parent
 
 PORT = 8765
 PAIRING_CODE = f"{secrets.randbelow(1000000):06d}"
@@ -439,7 +443,11 @@ def run_cli_server():
 
 
 if __name__ == "__main__":
-    os.chdir(ROOT)
+    if ROOT.exists():
+        try:
+            os.chdir(ROOT)
+        except Exception:
+            pass
     use_cli = "--cli" in sys.argv or not GUI_AVAILABLE
 
     if use_cli:
