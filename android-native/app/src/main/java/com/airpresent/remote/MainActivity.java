@@ -321,7 +321,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       integrator.setPrompt("Point camera at AirPresent QR Code on PC screen");
       integrator.setBeepEnabled(true);
       integrator.setOrientationLocked(true);
-      integrator.setCaptureActivity(com.journeyapps.barcodescanner.CaptureActivity.class);
+      integrator.setCaptureActivity(ScannerActivity.class);
       integrator.initiateScan();
     } catch (Exception e) {
       Toast.makeText(this, "Could not open camera: " + e.getMessage(), Toast.LENGTH_LONG).show();

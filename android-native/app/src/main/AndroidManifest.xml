@@ -7,6 +7,6 @@
     <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
     </activity>
-    <activity android:name="com.journeyapps.barcodescanner.CaptureActivity" android:theme="@style/zxing_CaptureTheme" android:screenOrientation="portrait" android:stateNotNeeded="true" tools:replace="android:screenOrientation" />
+    <activity android:name=".ScannerActivity" android:screenOrientation="portrait" android:stateNotNeeded="true" />
   </application>
 </manifest>
