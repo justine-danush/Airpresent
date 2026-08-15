@@ -62,6 +62,15 @@ document.querySelector('#connect').onclick = () => {
   performPairing(code);
 };
 
+const showSettingsBtn = document.querySelector('#showSettings');
+if (showSettingsBtn) {
+  showSettingsBtn.onclick = () => {
+    pairing.hidden = false;
+    remote.hidden = true;
+    updateStatus('Enter PC address or 6-digit PIN.');
+  };
+}
+
 // Check for QR code auto-pairing in URL hash or query params (#code=123456 or ?code=123456)
 window.addEventListener('DOMContentLoaded', () => {
   let autoCode = '';

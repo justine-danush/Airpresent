@@ -27,6 +27,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
   private SensorManager sensors; private Sensor motionSensor; private boolean useGyroscope; private String token = "";
   private TextView state; private TextView statusDot; private EditText address; private EditText pinInput; private Button airButton; private boolean airOn = false;
+  private LinearLayout page1Container, page2Container;
   private float lastX, lastY; private long lastMove;
 
   @Override public void onCreate(Bundle saved) {
@@ -139,7 +140,13 @@ public class MainActivity extends Activity implements SensorEventListener {
     statusPill.addView(state);
     root.addView(statusPill);
 
-    // Connection Card
+    // PAGE 1: CONNECTION & PAIRING SCREEN (IP address, 6-digit PIN, QR scanner, Connect button)
+    page1Container = new LinearLayout(this);
+    page1Container.setOrientation(LinearLayout.VERTICAL);
+    page1Container.setGravity(Gravity.CENTER);
+    LinearLayout.LayoutParams p1Params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    page1Container.setLayoutParams(p1Params);
+
     LinearLayout connCard = new LinearLayout(this);
     connCard.setOrientation(LinearLayout.VERTICAL);
     connCard.setGravity(Gravity.CENTER);
@@ -186,22 +193,29 @@ public class MainActivity extends Activity implements SensorEventListener {
     LinearLayout.LayoutParams connBtnParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     connectBtn.setLayoutParams(connBtnParams);
     connCard.addView(connectBtn);
-    root.addView(connCard);
 
-    // Hero Air Cursor Toggle Button
+    page1Container.addView(connCard);
+    root.addView(page1Container);
+
+    // PAGE 2: CONNECTED REMOTE CONTROLLER SCREEN (Air cursor, click dials, slides, Esc)
+    page2Container = new LinearLayout(this);
+    page2Container.setOrientation(LinearLayout.VERTICAL);
+    page2Container.setGravity(Gravity.CENTER);
+    LinearLayout.LayoutParams p2Params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    page2Container.setLayoutParams(p2Params);
+    page2Container.setVisibility(View.GONE); // Hidden initially until connected!
+
     airButton = createStyledButton("START AIR CURSOR", Color.rgb(56, 189, 248), Color.rgb(59, 130, 246), Color.rgb(11, 15, 25), 24f, v -> {
       airOn = !airOn;
       updateAirButtonState();
       lastX = lastY = 0;
     });
     LinearLayout.LayoutParams airParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    airParams.setMargins(0, dpToPx(20), 0, dpToPx(20));
+    airParams.setMargins(0, 0, 0, dpToPx(20));
     airButton.setLayoutParams(airParams);
     airButton.setPadding(dpToPx(24), dpToPx(22), dpToPx(24), dpToPx(22));
     airButton.setTextSize(19);
-    root.addView(airButton);
 
-    // ROUND DIAL CONTROLLER for Left & Right Click
     LinearLayout dialHousing = new LinearLayout(this);
     dialHousing.setOrientation(LinearLayout.HORIZONTAL);
     dialHousing.setGravity(Gravity.CENTER);
@@ -217,9 +231,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     dialHousing.addView(leftCircle);
     dialHousing.addView(rightCircle);
-    root.addView(dialHousing);
 
-    // Slide Controls Grid (2 columns)
     LinearLayout slidesRow = new LinearLayout(this);
     slidesRow.setOrientation(LinearLayout.HORIZONTAL);
     LinearLayout.LayoutParams p1 = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
@@ -231,16 +243,38 @@ public class MainActivity extends Activity implements SensorEventListener {
     Button nextBtn = createStyledButton("NEXT ›", Color.argb(80, 56, 189, 248), Color.argb(80, 59, 130, 246), Color.WHITE, 18f, v -> send("{\"type\":\"key\",\"key\":\"next\"}"));
     slidesRow.addView(prevBtn, p1);
     slidesRow.addView(nextBtn, p2);
-    root.addView(slidesRow);
 
-    // Exit Button
     Button escapeBtn = createStyledButton("EXIT PRESENTATION (ESC)", Color.argb(35, 244, 63, 94), Color.argb(35, 244, 63, 94), Color.rgb(253, 164, 175), 18f, v -> send("{\"type\":\"key\",\"key\":\"escape\"}"));
     LinearLayout.LayoutParams escParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     escapeBtn.setLayoutParams(escParams);
-    root.addView(escapeBtn);
+
+    page2Container.addView(airButton);
+    page2Container.addView(dialHousing);
+    page2Container.addView(slidesRow);
+    page2Container.addView(escapeBtn);
+
+    Button repairBtn = createStyledButton("⚙️ RE-PAIR / CONNECTION SETTINGS", Color.argb(40, 255, 255, 255), Color.argb(40, 255, 255, 255), Color.rgb(148, 163, 184), 16f, v -> showPage(1));
+    LinearLayout.LayoutParams repairParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    repairParams.setMargins(0, dpToPx(16), 0, 0);
+    repairBtn.setLayoutParams(repairParams);
+    page2Container.addView(repairBtn);
+
+    root.addView(page2Container);
 
     scroll.addView(root);
     setContentView(scroll);
+  }
+
+  private void showPage(int page) {
+    runOnUiThread(() -> {
+      if (page == 1) {
+        page1Container.setVisibility(View.VISIBLE);
+        page2Container.setVisibility(View.GONE);
+      } else {
+        page1Container.setVisibility(View.GONE);
+        page2Container.setVisibility(View.VISIBLE);
+      }
+    });
   }
 
   private void updateAirButtonState() {
@@ -279,8 +313,9 @@ public class MainActivity extends Activity implements SensorEventListener {
         token = match.group(1);
         runOnUiThread(() -> {
           statusDot.setTextColor(Color.rgb(16, 185, 129));
-          state.setText("Connected securely. Ready for motion.");
+          state.setText("Connected to PC");
           updateAirButtonState();
+          showPage(2);
         });
       } catch (Exception e) {
         runOnUiThread(() -> {
