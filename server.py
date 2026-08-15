@@ -14,7 +14,6 @@ import sys
 import time
 import threading
 import queue
-import pyperclip
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -349,10 +348,11 @@ class AirPresentApp(tk.Tk):
     def copy_pair_url(self):
         url = self.get_pair_url()
         try:
-            pyperclip.copy(url)
-        except Exception:
             self.clipboard_clear()
             self.clipboard_append(url)
+            self.update()
+        except Exception:
+            pass
         gui_log("📋 Auto-Pair URL copied to clipboard!")
 
     def start_server(self):
