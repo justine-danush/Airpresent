@@ -291,7 +291,31 @@ public class MainActivity extends Activity implements SensorEventListener {
     });
   }
 
+  private static final int CAMERA_REQ_CODE = 101;
+
   private void startQrScan() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      if (checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        requestPermissions(new String[]{android.Manifest.permission.CAMERA}, CAMERA_REQ_CODE);
+        return;
+      }
+    }
+    launchScanner();
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == CAMERA_REQ_CODE) {
+      if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        launchScanner();
+      } else {
+        Toast.makeText(this, "Camera permission required to scan QR code.", Toast.LENGTH_LONG).show();
+      }
+    }
+  }
+
+  private void launchScanner() {
     try {
       IntentIntegrator integrator = new IntentIntegrator(this);
       integrator.setPrompt("Point camera at AirPresent QR Code on PC screen");
@@ -300,7 +324,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       integrator.setCaptureActivity(com.journeyapps.barcodescanner.CaptureActivity.class);
       integrator.initiateScan();
     } catch (Exception e) {
-      Toast.makeText(this, "Could not open camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, "Could not open camera: " + e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
 
