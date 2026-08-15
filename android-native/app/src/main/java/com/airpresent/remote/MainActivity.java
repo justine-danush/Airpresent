@@ -361,6 +361,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 
   private String post(String path, String json) throws Exception {
     HttpURLConnection c = (HttpURLConnection) new URL(base() + path).openConnection();
+    c.setConnectTimeout(3000);
+    c.setReadTimeout(3000);
     c.setRequestMethod("POST");
     c.setRequestProperty("Content-Type", "application/json");
     c.setDoOutput(true);
